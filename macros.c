@@ -471,7 +471,7 @@ double fline(double* x, double* par)
     return par[0] + par[1] * x[0];
 }
 
-void DrawCanvas(std::string filename, double factor = 10.5)
+TCanvas* DrawCanvas(std::string filename, double factor = 10.5)
 {
     gStyle->SetPalette(kGreyScale);
     gStyle->SetOptStat(11);
@@ -556,4 +556,28 @@ void DrawCanvas(std::string filename, double factor = 10.5)
     TF1* fy2 = new TF1("fy2", "[0] + [1]*x", 0, 125);
     fy2->SetParameters(fy->GetParameter(0), fy->GetParameter(1));
     fy2->Draw("same");
+
+    return c;
+}
+
+void DrawAll(const char* dirname)
+{
+    TSystemDirectory dir(dirname, dirname);
+    TList *files = dir.GetListOfFiles();
+    if (files) {
+        TSystemFile *file;
+        TString fname;
+        TIter next(files);
+
+        while ((file=(TSystemFile*)next())) {
+            fname = TString(dirname) + "/" + file->GetName();
+            if (!file->IsDirectory() && fname.EndsWith(".dat")) {
+	        std::cout << fname << std::endl;
+		std::string sample(fname.Data());
+		int index = TString(file->GetName()).Index(".dat");
+		TString ss = TString(file->GetName(), index);
+		DrawCanvas(sample)->SaveAs(Form("%s.png", ss.Data()));
+	    }
+	}
+    }
 }
